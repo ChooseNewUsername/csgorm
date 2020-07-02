@@ -4,7 +4,6 @@ import (
 	"csgorm/log"
 	"csgorm/schema"
 	"database/sql"
-	"fmt"
 	"strings"
 )
 
@@ -29,6 +28,7 @@ func (s *Session) Raw(sql string,values ...interface{}) *Session {
 
 func (s *Session)CreateTable(dest interface{}) *Session  {
 	sch := schema.Parse(dest)
+	PRIMARY:=""
 	s.sql.WriteString("CREATE TABLE ` ")
 	s.sql.WriteString(sch.Name)
 	s.sql.WriteString("` (")
@@ -36,19 +36,21 @@ func (s *Session)CreateTable(dest interface{}) *Session  {
 		f := sch.FieldMap[sch.FieldNames[i]]
 		tag := f.Tag
 		kov := strings.Split(tag, ";")
-		fmt.Println(kov)
-	}
-
-	return s
-}
-func analysisTableCloumn(tag string) string {
-	var sql string
-	kov := strings.Split(tag, ";")
-	for i:=0;i<len(kov);i++{
-		if strings.Contains(kov[i], ":"){
-			kv := strings.Split(kov[i], ":")
+		s.sql.WriteString("`"+strings.ToLower(f.Name)+"`  ")
+		for i:=0;i<len(kov);i++{
+			if kov[i] =="PRIMARY" {
+				PRIMARY ="PRIMARY KEY (`"+strings.ToLower(f.Name)+"`)"
+			}else {
+				s.sql.WriteString(kov[i])
+				s.sql.WriteString(" ")
+			}
 
 		}
+		s.sql.WriteString(",")
+
 	}
-	return sql
+	s.sql.WriteString(PRIMARY)
+	s.sql.WriteString(" )AUTO_INCREMENT=10207705 DEFAULT CHARSET=utf8;")
+	return s
 }
+
